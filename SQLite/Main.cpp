@@ -24,24 +24,18 @@ TODO: insert, select, delete and update values from database
 
 int main(int argc, char* argv[])
 {
-	Database database("test.db");
-
-	if (database.isOpen())
+	Database database;
+	if (database.open("test.db"))
 	{
 		database.dropTable("table2");
 		database.dropTable("COMPANY");
-		std::string message;
 
-		IntType val1;
-		val1.setName("integer_val");
-
-		FloatType val2;
-		val2.setName("float_val");
-
-		StringType val3;
-		val3.setName("string_val");
+		DataType val1("integer", "INT", false, true);
+		DataType val2("floatingPointNumber", "FLOAT", false, true);
+		DataType val3("string", "TEXT", false, true);
 
 		database.createTable("table2", &val1, &val2, &val3);
+		database.insertInto("table2", 1, 2.0f, "three");
 	}
 	
 	getchar();

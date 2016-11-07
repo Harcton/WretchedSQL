@@ -1,40 +1,25 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "sqlite3.h"
 
 struct DataType
 {
 	friend class Database;
 public:
-	std::string toStringSQL() { return name + " " + type + " NOT NULL"; }
+	DataType(std::string name, std::string dataTypeSQL, const bool primaryKey, const bool notNull) : _primaryKey(primaryKey), _notNull(notNull)
+	{
+		setName(name);
+		setDataTypeSQL(dataTypeSQL);
+	}
+	std::string toStringSQL() { return _name + " " + _dataTypeSQL + (_notNull ? " NOT NULL" : "") + (_primaryKey ? " PRIMARY KEY" : ""); }
 	void setName(std::string name);
+	void setDataTypeSQL(std::string dataTypeSQL);
 protected:
-	std::string name;
-	std::string type;
-};
-struct IntType : public DataType
-{
-	IntType()
-	{
-		type = "INT";
-	}
-	int value;
-};
-struct FloatType : public DataType
-{
-	FloatType()
-	{
-		type = "REAL";
-	}
-	float value;
-};
-struct StringType : public DataType
-{
-	StringType()
-	{
-		type = "TEXT";
-	}
-	std::string value;
+	std::string _name;
+	std::string _dataTypeSQL;
+	const bool _primaryKey;
+	const bool _notNull;
 };
 template<typename T>
 std::string toStringSQL(T* dt)
@@ -47,11 +32,28 @@ std::string toStringSQL(T* dt, Args* ... args)
 {
 	return toStringSQL(dt) + ", " + toStringSQL(args...);
 }
+int SQLCallbackHandler(void *NotUsed, int argc, char **argv, char **azColName);
+template<typename T>
+std::string toCommaSeparatedString(T val)
+{
+	//if (std::is_integral<T>::value)
+	//	return std::to_string((int)val);
+	//if (std::is_floating_point<T>::value)
+	//	return std::to_string((float)val);
+	return "0";
+	return "toSpaceSeparatedString::error_type";
+}
+template<typename T, typename ...Args>
+std::string toCommaSeparatedString(T val, Args ... args)
+{
+	return toCommaSeparatedString(val) + ',' + toCommaSeparatedString(args...);
+}
 
 
 class Database
 {
 public:
+	Database();
 	Database(std::string path);
 	~Database();
 
@@ -70,11 +72,34 @@ public:
 		return executeSQL(message);
 	}
 	bool dropTable(std::string name) { return executeSQL("DROP TABLE " + name); }
-	bool executeSQL(std::string msg);//Executes given message in its native SQL format
-	bool isOpen() { return open; }
-private:
+	bool executeSQL(std::string msg, const bool _printVallback = true);//Executes given message in its native SQL format
+	bool open(std::string path);
+	bool isOpen() { return _open; }
 
-	bool open;
+	//Insert into table
+	template<typename T, typename ... Args>
+	bool insertInto(std::string tableName, T t, Args ... args)
+	{
+		if (!_open)
+			return false;
+
+		std::string arguments(toCommaSeparatedString(t, args...));
+		std::string message = "INSERT INTO " + tableName + " (" + "integer,floatingPointNumber,string"/*TODO: get column names*/+ ") "  \
+			"VALUES (" + arguments + "); ";
+		if (executeSQL(message))
+		{
+
+		}
+	}
+	int callback(int argc, char **argv, char **azColName);
+
+
+private:
+	bool _open;
 	sqlite3* database;
+	void printCallback();
+
+	//Callback
+	std::vector<std::pair<std::string, std::string>> callbackColumns;
 	char *error;
 };
