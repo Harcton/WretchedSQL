@@ -78,6 +78,7 @@ bool Database::open(std::string path)
 }
 bool Database::executeSQL(std::string msg, const bool _printVallback)
 {
+	callbackColumns.clear();//Clear all callback columns at this point
 	if (!_open)
 	{
 		std::cout << "\nCannot execute SQL command! Database is not open!";
@@ -104,4 +105,12 @@ void Database::printCallback()
 {
 	for (int i = 0; i < callbackColumns.size(); i++)
 		std::cout << "\n" + callbackColumns[i].first + " = " + callbackColumns[i].second;
+}
+std::vector<std::string> Database::getColumnNames(std::string tableName)
+{
+	executeSQL("PRAGMA table_info(table2);", false);
+	std::vector<std::string> columns;
+	for (unsigned i = 0; i < callbackColumns.size() / 6; i++)
+		columns.push_back(callbackColumns[i * 6 + 1].second);
+	return columns;
 }

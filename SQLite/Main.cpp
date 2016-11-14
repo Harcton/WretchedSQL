@@ -28,13 +28,12 @@ int main(int argc, char* argv[])
 	if (database.open("test.db"))
 	{
 		database.dropTable("table2");
-		database.dropTable("COMPANY");
 
 		DataType val1("integer", "INT", false, true);
 		DataType val2("floatingPointNumber", "FLOAT", false, true);
 		DataType val3("string", "TEXT", false, true);
 
-		database.createTable("table2", &val1, &val2, &val3);
+		database.createTable("table2", &val1, &val2 , &val3);
 		database.insertInto("table2", 1, 2.0f, "three");
 	}
 	

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <typeinfo>
 #include "sqlite3.h"
 
 struct DataType
@@ -33,21 +34,35 @@ std::string toStringSQL(T* dt, Args* ... args)
 	return toStringSQL(dt) + ", " + toStringSQL(args...);
 }
 int SQLCallbackHandler(void *NotUsed, int argc, char **argv, char **azColName);
+
 template<typename T>
 std::string toCommaSeparatedString(T val)
 {
-	//if (std::is_integral<T>::value)
-	//	return std::to_string((int)val);
-	//if (std::is_floating_point<T>::value)
-	//	return std::to_string((float)val);
+//	/*
+//	if (std::is_integral<T>::value)
+//		return std::to_string((int)val);
+//	if (std::is_floating_point<T>::value)
+//		return std::to_string((float)val);
+//	*/
+//	//if (std::is_integral<T>::value)
+//	//	return std::to_string((int)val);
+//	//if (std::is_pointer<T>::value)
+//	//	return (const char*)val;
+//	//if (std::is_floating_point<T>::value)
+//	//	return std::to_string((float)val);
 	return "0";
-	return "toSpaceSeparatedString::error_type";
 }
 template<typename T, typename ...Args>
 std::string toCommaSeparatedString(T val, Args ... args)
 {
 	return toCommaSeparatedString(val) + ',' + toCommaSeparatedString(args...);
 }
+
+
+
+
+
+
 
 
 class Database
@@ -83,16 +98,27 @@ public:
 		if (!_open)
 			return false;
 
-		std::string arguments(toCommaSeparatedString(t, args...));
-		std::string message = "INSERT INTO " + tableName + " (" + "integer,floatingPointNumber,string"/*TODO: get column names*/+ ") "  \
-			"VALUES (" + arguments + "); ";
-		if (executeSQL(message))
-		{
 
+		std::string arguments(toCommaSeparatedString(t, args...));
+		std::vector<std::string> columns(getColumnNames(tableName));
+		if (columns.size() == 0)
+			return false;
+
+		std::string message = "INSERT INTO " + tableName + " (";
+		for (unsigned i = 0; i < columns.size(); i++)
+		{
+			if (i != 0)
+				message += ", ";
+			message += columns[i];
+		}
+		message += ") VALUES (" + arguments + "); ";
+		if (executeSQL(message, false))
+		{
+			std::cout << "\nValues inserted into " + tableName;
 		}
 	}
 	int callback(int argc, char **argv, char **azColName);
-
+	std::vector<std::string> getColumnNames(std::string tableName);
 
 private:
 	bool _open;
@@ -101,5 +127,5 @@ private:
 
 	//Callback
 	std::vector<std::pair<std::string, std::string>> callbackColumns;
-	char *error;
+	char* error;
 };
