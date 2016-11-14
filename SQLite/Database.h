@@ -4,11 +4,11 @@
 #include <typeinfo>
 #include "sqlite3.h"
 
-struct DataType
+struct DataField
 {
 	friend class Database;
 public:
-	DataType(std::string name, std::string dataTypeSQL, const bool primaryKey, const bool notNull) : _primaryKey(primaryKey), _notNull(notNull)
+	DataField(std::string name, std::string dataTypeSQL, const bool primaryKey, const bool notNull) : _primaryKey(primaryKey), _notNull(notNull)
 	{
 		setName(name);
 		setDataTypeSQL(dataTypeSQL);
@@ -25,7 +25,7 @@ protected:
 template<typename T>
 std::string toStringSQL(T* dt)
 {
-	DataType* ptr(dt);
+	DataField* ptr(dt);
 	return ptr->toStringSQL();
 }
 template<typename T, typename ... Args>
@@ -38,19 +38,7 @@ int SQLCallbackHandler(void *NotUsed, int argc, char **argv, char **azColName);
 template<typename T>
 std::string toCommaSeparatedString(T val)
 {
-//	/*
-//	if (std::is_integral<T>::value)
-//		return std::to_string((int)val);
-//	if (std::is_floating_point<T>::value)
-//		return std::to_string((float)val);
-//	*/
-//	//if (std::is_integral<T>::value)
-//	//	return std::to_string((int)val);
-//	//if (std::is_pointer<T>::value)
-//	//	return (const char*)val;
-//	//if (std::is_floating_point<T>::value)
-//	//	return std::to_string((float)val);
-	return "0";
+	return Database::valueToString(val);
 }
 template<typename T, typename ...Args>
 std::string toCommaSeparatedString(T val, Args ... args)
@@ -67,6 +55,11 @@ std::string toCommaSeparatedString(T val, Args ... args)
 
 class Database
 {
+public:
+	static std::string valueToString(int val) { return std::to_string(val); }
+	static std::string valueToString(float val) { return std::to_string(val); }
+	static std::string valueToString(const char* val) { std::string value("\""); value += val; value.push_back('\"'); return value; }
+
 public:
 	Database();
 	Database(std::string path);

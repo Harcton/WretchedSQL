@@ -1,7 +1,7 @@
 #include "Database.h"
 #include <iostream>
 
-void DataType::setName(std::string name)
+void DataField::setName(std::string name)
 {
 	for (int i(0); i < name.size(); i++)
 	{
@@ -14,7 +14,7 @@ void DataType::setName(std::string name)
 	}
 	_name = name;
 }
-void DataType::setDataTypeSQL(std::string dataTypeSQL)
+void DataField::setDataTypeSQL(std::string dataTypeSQL)
 {
 	_dataTypeSQL = dataTypeSQL;
 }

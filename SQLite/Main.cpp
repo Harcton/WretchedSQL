@@ -29,9 +29,9 @@ int main(int argc, char* argv[])
 	{
 		database.dropTable("table2");
 
-		DataType val1("integer", "INT", false, true);
-		DataType val2("floatingPointNumber", "FLOAT", false, true);
-		DataType val3("string", "TEXT", false, true);
+		DataField val1("integer", "INT", false, true);
+		DataField val2("floatingPointNumber", "FLOAT", false, true);
+		DataField val3("string", "TEXT", false, true);
 
 		database.createTable("table2", &val1, &val2 , &val3);
 		database.insertInto("table2", 1, 2.0f, "three");
