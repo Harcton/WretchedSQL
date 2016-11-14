@@ -1,7 +1,7 @@
 #include "Database.h"
 #include <iostream>
 
-void DataField::setName(std::string name)
+void DataColumn::setName(std::string name)
 {
 	for (int i(0); i < name.size(); i++)
 	{
@@ -14,7 +14,7 @@ void DataField::setName(std::string name)
 	}
 	_name = name;
 }
-void DataField::setDataTypeSQL(std::string dataTypeSQL)
+void DataColumn::setDataTypeSQL(std::string dataTypeSQL)
 {
 	_dataTypeSQL = dataTypeSQL;
 }
@@ -45,7 +45,7 @@ Database::Database() : _open(true)
 {
 
 }
-Database::Database(std::string path) : Database()
+Database::Database(const std::string path) : Database()
 {
 	if (sqlite3_open(path.data(), &database))
 	{
@@ -108,9 +108,31 @@ void Database::printCallback()
 }
 std::vector<std::string> Database::getColumnNames(std::string tableName)
 {
-	executeSQL("PRAGMA table_info(table2);", false);
+	executeSQL("PRAGMA table_info(" + tableName + ");", false);
 	std::vector<std::string> columns;
 	for (unsigned i = 0; i < callbackColumns.size() / 6; i++)
 		columns.push_back(callbackColumns[i * 6 + 1].second);
 	return columns;
+}
+unsigned Database::getColumnCount(std::string tableName)
+{
+	executeSQL("PRAGMA table_info(" + tableName + ");", false);
+	return callbackColumns.size() / 6;
+}
+bool Database::containsTable(const std::string tableName)
+{
+	if (executeSQL("PRAGMA table_info(" + tableName + ");", false))
+	{
+		if (error)
+			return false;
+		if (callbackColumns.size() > 0)
+			return true;
+		else
+			return false;
+	}
+	return false;
+}
+int Database::getTableElementCount(const std::string tableName)
+{
+	return 0;
 }

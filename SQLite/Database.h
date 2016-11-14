@@ -4,11 +4,11 @@
 #include <typeinfo>
 #include "sqlite3.h"
 
-struct DataField
+struct DataColumn
 {
 	friend class Database;
 public:
-	DataField(std::string name, std::string dataTypeSQL, const bool primaryKey, const bool notNull) : _primaryKey(primaryKey), _notNull(notNull)
+	DataColumn(std::string name, std::string dataTypeSQL, const bool primaryKey, const bool notNull) : _primaryKey(primaryKey), _notNull(notNull)
 	{
 		setName(name);
 		setDataTypeSQL(dataTypeSQL);
@@ -25,8 +25,7 @@ protected:
 template<typename T>
 std::string toStringSQL(T* dt)
 {
-	DataField* ptr(dt);
-	return ptr->toStringSQL();
+	return ((DataColumn*)(dt))->toStringSQL();
 }
 template<typename T, typename ... Args>
 std::string toStringSQL(T* dt, Args* ... args)
@@ -59,30 +58,49 @@ public:
 	static std::string valueToString(int val) { return std::to_string(val); }
 	static std::string valueToString(float val) { return std::to_string(val); }
 	static std::string valueToString(const char* val) { std::string value("\""); value += val; value.push_back('\"'); return value; }
-
+	static std::string valueToString(std::string& val) { return "\"" + val + "\""; }
+	enum class Operator
+	{
+		equal, notEqual, larger, smaller, equalOrLarger, equalOrSmaller
+	};
+	std::string operatorToString(Operator op)
+	{
+		switch (op)
+		{
+		case Operator::equal: return "=";
+		case Operator::notEqual: return "<>";
+		case Operator::larger: return ">";
+		case Operator::smaller: return "<";
+		case Operator::equalOrLarger: return ">=";
+		case Operator::equalOrSmaller: return "<=";
+		}
+	}
 public:
 	Database();
-	Database(std::string path);
+	Database(const std::string path);
 	~Database();
-
-	template<typename T, typename ...Args>
-	bool createTable(std::string name, T* dt, Args* ... args)
-	{
-		std::string str = toStringSQL(dt, args...);
-		std::string message("CREATE TABLE " + name + "( " + toStringSQL(dt, args...) + ");");
-		//message = "CREATE TABLE COMPANY(ID INT PRIMARY KEY NOT NULL, NAME TEXT NOT NULL, AGE INT NOT NULL, ADDRESS CHAR(50), SALARY REAL);";
-		//message = "CREATE TABLE COMPANY("  \
-		//	"ID				INT		PRIMARY KEY     NOT NULL," \
-		//	"NAME           TEXT    NOT NULL," \
-		//	"AGE            INT     NOT NULL," \
-		//	"ADDRESS        CHAR(50)," \
-		//	"SALARY         REAL );";
-		return executeSQL(message);
-	}
-	bool dropTable(std::string name) { return executeSQL("DROP TABLE " + name); }
-	bool executeSQL(std::string msg, const bool _printVallback = true);//Executes given message in its native SQL format
 	bool open(std::string path);
 	bool isOpen() { return _open; }
+	bool containsTable(const std::string tableName);
+	bool dropTable(std::string name) { return executeSQL("DROP TABLE " + name); }
+	bool executeSQL(std::string msg, const bool _printVallback = true);//Executes given message in its native SQL format
+	int getTableElementCount(const std::string tableName);
+	int callback(int argc, char **argv, char **azColName);
+	std::vector<std::string> getColumnNames(std::string tableName);
+	unsigned getColumnCount(std::string tableName);
+
+	template<typename T, typename ...Args>
+	bool createTable(const std::string name, T* dt, Args* ... args)
+	{
+		std::string message("CREATE TABLE " + name + " ( " + toStringSQL(dt, args...) + ");");
+		if (executeSQL(message) && !error)
+		{
+			std::cout << "\nTable created: " + name;
+			return true;
+		}
+		std::cout << "\nFailed to create table: " + name + "\nError:" + error;
+		return false;
+	}
 
 	//Insert into table
 	template<typename T, typename ... Args>
@@ -90,8 +108,7 @@ public:
 	{
 		if (!_open)
 			return false;
-
-
+		
 		std::string arguments(toCommaSeparatedString(t, args...));
 		std::vector<std::string> columns(getColumnNames(tableName));
 		if (columns.size() == 0)
@@ -110,8 +127,21 @@ public:
 			std::cout << "\nValues inserted into " + tableName;
 		}
 	}
-	int callback(int argc, char **argv, char **azColName);
-	std::vector<std::string> getColumnNames(std::string tableName);
+	template<typename T>
+	std::vector<std::string> getRecords(const std::string tableName, const std::string columnName, T value, Operator comparisonOperator = Operator::equal)
+	{
+		std::vector<std::string> records;
+		if (executeSQL("SELECT * FROM " + tableName + " WHERE " + columnName + " " + operatorToString(comparisonOperator) + " " + Database::valueToString(value), false) && callbackColumns.size() > 0)
+			records = callbackColumns;
+		return callbackColumns;
+	}
+	template<typename T>
+	bool containsRecord(const std::string tableName, const std::string columnName, T value)
+	{
+		if (executeSQL("SELECT * FROM " + tableName + " WHERE " + columnName + " = " + Database::valueToString(value), false) && callbackColumns.size() > 0)
+			return true;
+		return false;
+	}
 
 private:
 	bool _open;

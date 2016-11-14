@@ -2,67 +2,44 @@
 #include <vector>
 #include <string>
 #include "Database.h"
-/*
-TODO: insert, select, delete and update values from database
-*/
 
 
-
-
-//template<typename T>
-//T adder(T v)
-//{
-//	return v;
-//}
-//template<typename T, typename... Args>
-//T adder(T first, Args... args)
-//{
-//	return first + adder(args...);
-//}
-//long sum = adder(1, 2, 3, 8, 7);
+#define HIGHSCORES_TABLE_NAME "highscores"
 
 
 int main(int argc, char* argv[])
 {
 	Database database;
-	if (database.open("test.db"))
+	if (database.open("database.db"))
 	{
-		database.dropTable("table2");
+		//database.dropTable(HIGHSCORES_TABLE_NAME);
 
-		DataField val1("integer", "INT", false, true);
-		DataField val2("floatingPointNumber", "FLOAT", false, true);
-		DataField val3("string", "TEXT", false, true);
+		if (!database.containsTable(HIGHSCORES_TABLE_NAME))
+		{//Create table
+			DataColumn id("ID", "INT", true, true);
+			DataColumn name("name", "TEXT", false, true);
+			DataColumn score("score", "FLOAT", false, true);
+			database.createTable(HIGHSCORES_TABLE_NAME, &id, &name, &score);
+		}
+		
+		if (true)
+		{
+			database.insertInto(HIGHSCORES_TABLE_NAME, 1, "Geddy", 123.5f);
+			database.insertInto(HIGHSCORES_TABLE_NAME, 2, "Billy", 123);
+			database.insertInto(HIGHSCORES_TABLE_NAME, 3, "Beefcake", 124);
+			database.insertInto(HIGHSCORES_TABLE_NAME, 4, "Alex", 125);
+			database.insertInto(HIGHSCORES_TABLE_NAME, 5, "Keijo", 61);
+			database.insertInto(HIGHSCORES_TABLE_NAME, 6, "Neil", -1.1f);
+		}
 
-		database.createTable("table2", &val1, &val2 , &val3);
-		database.insertInto("table2", 1, 2.0f, "three");
+		//Insert a fictional player score into the highscores table
+		int playerID(0);
+		std::string playerName("Teo Hiltunen -TTV14SP");
+		float playerScore(9000.1f);
+		if (!database.containsRecord(HIGHSCORES_TABLE_NAME, "ID", playerID))
+			database.insertInto(HIGHSCORES_TABLE_NAME, playerID, playerName, playerScore);		
 	}
 	
 	getchar();
 	return 0;
 }
-
-
-/*
-
-//Dropping a table
-message = "DROP TABLE COMPANY";
-
-//Inserting into a table
-message = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "  \
-"VALUES (1, 'Paul', 32, 'California', 20000.00 ); " \
-"INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) "  \
-"VALUES (2, 'Allen', 25, 'Texas', 15000.00 ); "     \
-"INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)" \
-"VALUES (3, 'Teddy', 23, 'Norway', 20000.00 );" \
-"INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)" \
-"VALUES (4, 'Mark', 25, 'Rich-Mond ', 65000.00 );";
-
-//Creating a new table
-message = "CREATE TABLE COMPANY("  \
-"ID				INT		PRIMARY KEY     NOT NULL," \
-"NAME           TEXT    NOT NULL," \
-"AGE            INT     NOT NULL," \
-"ADDRESS        CHAR(50)," \
-"SALARY         REAL );";
-
-*/
