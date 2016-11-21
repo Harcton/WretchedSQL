@@ -45,26 +45,19 @@ Database::Database() : _open(true)
 {
 
 }
-Database::Database(const std::string path) : Database()
+Database::Database(std::string name) : Database()
 {
-	if (sqlite3_open(path.data(), &database))
-	{
-		_open = false;
-		std::cout << "\nCan't open database: " << sqlite3_errmsg(database);
-	}
-	else
-	{
-		std::cout << "\nOpened database successfully";
-	}
+	open(name);
 }
 Database::~Database()
 {
 	if (_open)
 		sqlite3_close(database);
 }
-bool Database::open(std::string path)
+bool Database::open(std::string name)
 {
-	if (sqlite3_open(path.data(), &database))
+	name += ".db";
+	if (sqlite3_open(name.data(), &database))
 	{
 		_open = false;
 		std::cout << "\nCan't open database: " << sqlite3_errmsg(database);
@@ -72,12 +65,13 @@ bool Database::open(std::string path)
 	}
 	else
 	{
-		std::cout << "\nOpened database successfully";
+		std::cout << "\nOpened database successfully: " + name;
 		return true;
 	}
 }
 bool Database::executeSQL(std::string msg, const bool _printVallback)
 {
+	//TODO: prevent injection
 	callbackColumns.clear();//Clear all callback columns at this point
 	if (!_open)
 	{
@@ -118,6 +112,13 @@ unsigned Database::getColumnCount(std::string tableName)
 {
 	executeSQL("PRAGMA table_info(" + tableName + ");", false);
 	return callbackColumns.size() / 6;
+}
+unsigned Database::getRecordCount(std::string tableName)
+{
+	unsigned colCount(getColumnCount(tableName));
+	if (executeSQL("SELECT * FROM " + tableName, false))
+		return callbackColumns.size() / colCount;
+	return 0;
 }
 bool Database::containsTable(const std::string tableName)
 {

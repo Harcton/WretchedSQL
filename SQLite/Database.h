@@ -77,7 +77,7 @@ public:
 	}
 public:
 	Database();
-	Database(const std::string path);
+	Database(std::string name);
 	~Database();
 	bool open(std::string path);
 	bool isOpen() { return _open; }
@@ -88,6 +88,7 @@ public:
 	int callback(int argc, char **argv, char **azColName);
 	std::vector<std::string> getColumnNames(std::string tableName);
 	unsigned getColumnCount(std::string tableName);
+	unsigned getRecordCount(std::string tableName);
 
 	template<typename T, typename ...Args>
 	bool createTable(const std::string name, T* dt, Args* ... args)
@@ -142,6 +143,19 @@ public:
 			return true;
 		return false;
 	}
+	std::vector<std::string> getValuesInColumn(const std::string tableName, const std::string columnName)
+	{
+		std::vector<std::string> values;
+		if (!executeSQL("SELECT * FROM " + tableName, false))
+			return values;
+
+		for (unsigned i = 0; i < callbackColumns.size(); i++)
+		{
+			if (callbackColumns[i].first == columnName)
+				values.push_back(callbackColumns[i].second);
+		}
+		return values;
+	}
 
 private:
 	bool _open;
@@ -149,6 +163,6 @@ private:
 	void printCallback();
 
 	//Callback
-	std::vector<std::pair<std::string, std::string>> callbackColumns;
+	std::vector<std::pair<std::string/*title*/, std::string/*value*/>> callbackColumns;
 	char* error;
 };

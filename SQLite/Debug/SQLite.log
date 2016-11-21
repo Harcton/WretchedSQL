@@ -1,3 +1,4 @@
 ﻿  Main.cpp
-  SQLite.vcxproj -> C:\Users\teohil\Desktop\SQLite\Debug\SQLite.exe
-  SQLite.vcxproj -> C:\Users\teohil\Desktop\SQLite\Debug\SQLite.pdb (Partial PDB)
+c:\users\teohil\desktop\wretchedsql\sqlite\database.h(130): warning C4715: 'Database::insertInto<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,float>': not all control paths return a value
+  SQLite.vcxproj -> C:\Users\teohil\Desktop\WretchedSQL\Debug\SQLite.exe
+  SQLite.vcxproj -> C:\Users\teohil\Desktop\WretchedSQL\Debug\SQLite.pdb (Partial PDB)
